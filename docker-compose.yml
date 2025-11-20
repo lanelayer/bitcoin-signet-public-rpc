@@ -1,0 +1,36 @@
+services:
+  bitcoind:
+    image: bitcoin/bitcoin:27.1
+    container_name: bitcoind-signet
+    restart: unless-stopped
+    volumes:
+      - ./data:/home/bitcoin/.bitcoin
+    command:
+      -printtoconsole
+      -signet=1
+      -rpcbind=0.0.0.0
+      -rpcallowip=127.0.0.1/32
+      -rpcport=38332
+      -port=38333
+      -txindex=1
+    networks:
+      - signet-net
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx-signet
+    restart: unless-stopped
+    ports:
+      - "38343:443"
+      - "38380:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro   
+    depends_on:
+      - bitcoind
+    networks:
+      - signet-net
+
+networks:
+  signet-net:
+    driver: bridge
